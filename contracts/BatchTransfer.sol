@@ -12,14 +12,19 @@ contract BatchTransfer {
         external
         payable
     {
+        uint256 total = amount * addresses.length;
         require(
-            msg.value == amount * addresses.length,
+            msg.value <= total,
+            "BatchTransfer: value is not equal"
+        );
+        require(
+            msg.value == total,
             "BatchTransfer: insufficient funds"
         );
 
         for (uint256 i = 0; i < addresses.length; ) {
             (bool success, ) = addresses[i].call{value: amount}("");
-            require(success, "transfer failed");
+            require(success, "BatchTransfer: transfer failed");
 
             unchecked {
                 i++;
@@ -36,14 +41,19 @@ contract BatchTransfer {
             "BatchTransfer: array length inconsistent"
         );
 
+        uint256 value = msg.value;
+
         for (uint256 i = 0; i < addresses.length; ) {
             (bool success, ) = addresses[i].call{value: amounts[i]}("");
             require(success, "BatchTransfer: transfer failed");
 
             unchecked {
+                value -= amounts[i];
                 i++;
             }
         }
+
+        require(value == 0, "BatchTransfer: value is not equal");
     }
 
     function transferToken(IERC20 token, address[] calldata addresses, uint256 amount) external {
