@@ -3,8 +3,10 @@ import { ethers } from "hardhat";
 import { BigNumber } from "@ethersproject/bignumber";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 
+import type { ERC20Token } from "../typechain-types/contracts/test/ERC20Token";
 import type { BatchTransfer } from "../typechain-types/contracts/BatchTransfer";
 
+let token: ERC20Token;
 let tokenAddress: string;
 let batchTransfer: BatchTransfer;
 let signers: SignerWithAddress[] = [];
@@ -14,12 +16,11 @@ describe("BatchTransfer", function () {
     signers = await ethers.getSigners();
 
     const ERC20 = await ethers.getContractFactory("ERC20Token");
-    const token = await ERC20.deploy("TEST", "TEST", "1000");
+    token = await ERC20.deploy("TEST", "TEST", "1000");
     tokenAddress = token.address;
 
     const BatchTransfer = await ethers.getContractFactory("BatchTransfer");
-    batchTransfer = await BatchTransfer.deploy();
-    tokenAddress = batchTransfer.address;
+    batchTransfer = await BatchTransfer.connect(signers[0]).deploy();
   });
 
   describe("Transfer Ether", function () {
@@ -100,6 +101,109 @@ describe("BatchTransfer", function () {
       const amounts = [BigNumber.from(1), BigNumber.from(2), BigNumber.from(3)];
 
       await method(addresses, amounts, { value: BigNumber.from(6) });
+    });
+  });
+
+  describe("Transfer ERC20", function () {
+    it("Insufficient funds", async function () {
+      const sender = signers[1];
+      const amount = BigNumber.from(1);
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256)"]
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+
+      await expect(
+        method(tokenAddress, addresses, amount)
+      ).to.be.revertedWith("BatchTransfer: insufficient funds");
+    });
+
+    it("Insufficient allowance", async function () {
+      const sender = signers[0];
+      const amount = BigNumber.from(1);
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256)"]
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+
+      await expect(
+        method(tokenAddress, addresses, amount)
+      ).to.be.revertedWith("BatchTransfer: insufficient allowance");
+    });
+
+    it("Batch transfer successful", async function () {
+      const sender = signers[0];
+      const amount = BigNumber.from(1);
+
+      await token.connect(sender).approve(batchTransfer.address, BigNumber.from(3));
+    
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256)"]
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+
+      expect(await token.balanceOf(addresses[0])).to.equal(BigNumber.from(0));
+      expect(await token.balanceOf(addresses[1])).to.equal(BigNumber.from(0));
+      expect(await token.balanceOf(addresses[2])).to.equal(BigNumber.from(0));
+
+      await method(tokenAddress, addresses, amount);
+
+      expect(await token.balanceOf(addresses[0])).to.equal(amount);
+      expect(await token.balanceOf(addresses[1])).to.equal(amount);
+      expect(await token.balanceOf(addresses[2])).to.equal(amount);
+    });
+  });
+
+  describe("Transfer ERC20(Different amounts)", function () {
+    it("The array length must be the same", async function () {
+      const sender = signers[0];
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256[])"]
+
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+      const amounts = [BigNumber.from(1), BigNumber.from(2), BigNumber.from(3), BigNumber.from(4)];
+
+      await expect(
+        method(tokenAddress, addresses, amounts)
+      ).to.be.revertedWith("BatchTransfer: array length inconsistent");
+    });
+
+    it("Insufficient funds", async function () {
+      const sender = signers[1];
+
+      await token.connect(sender).approve(batchTransfer.address, BigNumber.from(6));
+
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256[])"]
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+      const amounts = [BigNumber.from(1), BigNumber.from(2), BigNumber.from(3)];
+
+      await expect(
+        method(tokenAddress, addresses, amounts)
+      ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
+    });
+
+    it("Insufficient allowance", async function () {
+      const sender = signers[0];
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256[])"]
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+      const amounts = [BigNumber.from(1), BigNumber.from(2), BigNumber.from(3)];
+
+      await expect(
+        method(tokenAddress, addresses, amounts)
+      ).to.be.revertedWith("ERC20: insufficient allowance");
+    });
+
+    it("Batch transfer successful", async function () {
+      const sender = signers[0];
+
+      await token.connect(sender).approve(batchTransfer.address, BigNumber.from(6));
+    
+      const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256[])"]
+      const addresses = [signers[1].address, signers[2].address, signers[3].address];
+      const amounts = [BigNumber.from(1), BigNumber.from(2), BigNumber.from(3)];
+
+      expect(await token.balanceOf(addresses[0])).to.equal(BigNumber.from(0));
+      expect(await token.balanceOf(addresses[1])).to.equal(BigNumber.from(0));
+      expect(await token.balanceOf(addresses[2])).to.equal(BigNumber.from(0));
+
+      await method(tokenAddress, addresses, amounts);
+
+      expect(await token.balanceOf(addresses[0])).to.equal(amounts[0]);
+      expect(await token.balanceOf(addresses[1])).to.equal(amounts[1]);
+      expect(await token.balanceOf(addresses[2])).to.equal(amounts[2]);
     });
   });
 });
