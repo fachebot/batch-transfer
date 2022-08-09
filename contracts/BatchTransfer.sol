@@ -57,13 +57,13 @@ contract BatchTransfer {
     }
 
     function transferToken(IERC20 token, address[] calldata addresses, uint256 amount) external {
+        uint256 total = amount * addresses.length;
         require(
-            token.balanceOf(msg.sender) == amount * addresses.length,
+            token.balanceOf(msg.sender) >= total,
             "BatchTransfer: insufficient funds"
         );
         require(
-            token.allowance(msg.sender, address(this)) <
-                amount * addresses.length,
+            token.allowance(msg.sender, address(this)) >= total,
             "BatchTransfer: insufficient allowance"
         );
 
