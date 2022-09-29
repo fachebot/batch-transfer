@@ -13,14 +13,8 @@ contract BatchTransfer {
         payable
     {
         uint256 total = amount * addresses.length;
-        require(
-            msg.value <= total,
-            "BatchTransfer: value is not equal"
-        );
-        require(
-            msg.value == total,
-            "BatchTransfer: insufficient funds"
-        );
+        require(msg.value <= total, "BatchTransfer: value is not equal");
+        require(msg.value == total, "BatchTransfer: insufficient funds");
 
         for (uint256 i = 0; i < addresses.length; ) {
             (bool success, ) = addresses[i].call{value: amount}("");
@@ -56,7 +50,11 @@ contract BatchTransfer {
         require(value == 0, "BatchTransfer: value is not equal");
     }
 
-    function transferToken(IERC20 token, address[] calldata addresses, uint256 amount) external {
+    function transferToken(
+        IERC20 token,
+        address[] calldata addresses,
+        uint256 amount
+    ) external {
         uint256 total = amount * addresses.length;
         require(
             token.balanceOf(msg.sender) >= total,
@@ -76,7 +74,11 @@ contract BatchTransfer {
         }
     }
 
-    function transferToken(IERC20 token, address[] calldata addresses, uint256[] calldata amounts) external {
+    function transferToken(
+        IERC20 token,
+        address[] calldata addresses,
+        uint256[] calldata amounts
+    ) external {
         require(
             addresses.length == amounts.length,
             "BatchTransfer: array length inconsistent"

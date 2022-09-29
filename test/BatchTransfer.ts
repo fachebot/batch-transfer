@@ -24,7 +24,7 @@ describe("BatchTransfer", function () {
   });
 
   describe("Transfer Ether", function () {
-    it("Insufficient funds", async function () {
+    it("Should revert with the right error if insufficient funds", async function () {
       const sender = signers[0];
       const amount = BigNumber.from(1);
       const method = batchTransfer.connect(sender)["transfer(address[],uint256)"]
@@ -35,7 +35,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: insufficient funds");
     });
 
-    it("Transaction amount greater than transfer amount", async function () {
+    it("Should revert with the right error if amount is not equal", async function () {
       const sender = signers[0];
       const amount = BigNumber.from(1);
       const method = batchTransfer.connect(sender)["transfer(address[],uint256)"]
@@ -46,7 +46,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: value is not equal");
     });
   
-    it("Batch transfer successful", async function () {
+    it("Should batch transfer successful", async function () {
       const sender = signers[0];
       const amount = BigNumber.from(1);
       const method = batchTransfer.connect(sender)["transfer(address[],uint256)"]
@@ -57,7 +57,7 @@ describe("BatchTransfer", function () {
   });
 
   describe("Transfer Ether(Different amounts)", function () {
-    it("The array length must be the same", async function () {
+    it("Should revert with the right error if array length must be the same", async function () {
       const sender = signers[0];
       const method = batchTransfer.connect(sender)["transfer(address[],uint256[])"]
 
@@ -69,7 +69,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: array length inconsistent");
     });
 
-    it("Insufficient funds", async function () {
+    it("Should revert with the right error if insufficient funds", async function () {
       const sender = signers[0];
       const method = batchTransfer.connect(sender)["transfer(address[],uint256[])"]
 
@@ -81,7 +81,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: transfer failed");
     });
 
-    it("Transaction amount greater than transfer amount", async function () {
+    it("Should revert with the right error if tx value greater than transfer amount", async function () {
       const sender = signers[0];
       const method = batchTransfer.connect(sender)["transfer(address[],uint256[])"]
 
@@ -93,7 +93,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: value is not equal");
     });
   
-    it("Batch transfer successful", async function () {
+    it("Should batch transfer successful", async function () {
       const sender = signers[0];
       const method = batchTransfer.connect(sender)["transfer(address[],uint256[])"]
 
@@ -105,7 +105,7 @@ describe("BatchTransfer", function () {
   });
 
   describe("Transfer ERC20", function () {
-    it("Insufficient funds", async function () {
+    it("Should revert with the right error if insufficient funds", async function () {
       const sender = signers[1];
       const amount = BigNumber.from(1);
       const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256)"]
@@ -116,7 +116,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: insufficient funds");
     });
 
-    it("Insufficient allowance", async function () {
+    it("Should revert with the right error if insufficient allowance", async function () {
       const sender = signers[0];
       const amount = BigNumber.from(1);
       const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256)"]
@@ -127,7 +127,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: insufficient allowance");
     });
 
-    it("Batch transfer successful", async function () {
+    it("Should batch transfer successful", async function () {
       const sender = signers[0];
       const amount = BigNumber.from(1);
 
@@ -149,7 +149,7 @@ describe("BatchTransfer", function () {
   });
 
   describe("Transfer ERC20(Different amounts)", function () {
-    it("The array length must be the same", async function () {
+    it("Should revert with the right error if array length must be the same", async function () {
       const sender = signers[0];
       const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256[])"]
 
@@ -161,7 +161,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("BatchTransfer: array length inconsistent");
     });
 
-    it("Insufficient funds", async function () {
+    it("Should revert with the right error if insufficient funds", async function () {
       const sender = signers[1];
 
       await token.connect(sender).approve(batchTransfer.address, BigNumber.from(6));
@@ -175,7 +175,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
     });
 
-    it("Insufficient allowance", async function () {
+    it("Should revert with the right error if insufficient allowance", async function () {
       const sender = signers[0];
       const method = batchTransfer.connect(sender)["transferToken(address,address[],uint256[])"]
       const addresses = [signers[1].address, signers[2].address, signers[3].address];
@@ -186,7 +186,7 @@ describe("BatchTransfer", function () {
       ).to.be.revertedWith("ERC20: insufficient allowance");
     });
 
-    it("Batch transfer successful", async function () {
+    it("Should batch transfer successful", async function () {
       const sender = signers[0];
 
       await token.connect(sender).approve(batchTransfer.address, BigNumber.from(6));

@@ -29,8 +29,17 @@ npx hardhat compile
 npx hardhat test
 ```
 
-## Deploy
+Report Gas:
+
 ```shell
-npx hardhat node
-npx hardhat run scripts/deploy.ts
+REPORT_GAS=true npx hardhat test
+```
+
+## Deploy
+Preparation:
+- Set `NODE_URL` in `.env`
+- Set `PRIVATE_KEY` in `.env`
+
+```shell
+npx hardhat run scripts/deploy.ts --network <network>
 ```
